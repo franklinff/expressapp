@@ -3,7 +3,7 @@ var router = express.Router();
 var User = require('../models/user');
 var passport = require("passport");
 var ToDoHead = require('../models/toDotitle');
-var SubTitleToDo = require('../models/subtitleToDo');
+var ToDoSubtitle = require('../models/subtitleToDo');
 
 
 
@@ -96,18 +96,61 @@ router.get('/retriveToDolist',function(req,res){
     // });
 });
 
-
-
-
 router.delete('/deleteToDo/:id', function(req, res, next) {
-
-console.log(id);
-
-
+    //console.log(id);
     ToDoHead.findOneAndDelete(req.params.id, req.body, function (err, post) {
       if (err) return next(err);
       res.json(post);
     });
   });
+
+ router.get('/viewHeadIndividual',function(req,res){
+    console.log('I am in viewHeadIndividual');
+    ToDoHead.find({_id:req.query.title_head_id}).exec(function(error, docs) {
+        res.json(docs);  
+    });   
+ });
+
+
+router.post('/addSubTitle',function(req,res,next){
+
+    var subtitle =  new ToDoSubtitle({
+        to_do_headtitleid :  req.body.headertodo_id,
+        sub_title:  req.body.subtitle,
+        delete_subTitle:  '0',
+        created_dt:Date.now(),
+        updated_dt: '',
+     });
+ 
+     subtitle.save()
+     .then(item => {
+     res.send("item saved to database");
+     })
+     .catch(err => {
+     res.status(400).send("unable to save to database");
+     });
+ 
+ });
+
+ router.get('/listSubtitles',function(req,res){
+    console.log(req.query.title_head_id);
+    ToDoSubtitle.find({to_do_headtitleid:req.query.title_head_id}).sort({created_dt: -1}).exec(function(err, result) {
+        res.json(result);  
+    });
+
+    
+    // var listofTODO = ToDoHead.find({userid:req.query.userid}, function(error, comments).sort( { age: -1 } ) {
+    // res.json(comments);  
+    // });
+});
+
+router.put('/subtitleChecked',function(req,res,next){
+        ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'1'}, function (err, result) {
+          if (err) return next(err);
+          res.json(result);
+        });
+});
+
+ 
 
 module.exports = router;
