@@ -76,7 +76,7 @@ router.post('/save_todo_title',function(req,res,next){
 
     head_todo.save()
     .then(item => {
-    res.send("item saved to database");
+    res.json('item saved to database');
     })
     .catch(err => {
     res.status(400).send("unable to save to database");
@@ -119,14 +119,12 @@ router.post('/addSubTitle',function(req,res,next){
         sub_title:  req.body.subtitle,
         delete_subTitle:  '0',
         created_dt:Date.now(),
-        updated_dt: '',
+        updated_dt: ''
      });
  
-     subtitle.save()
-     .then(item => {
-     res.send("item saved to database");
-     })
-     .catch(err => {
+     subtitle.save().then(item => {
+     res.json("SubTitle added");
+     }).catch(err => {
      res.status(400).send("unable to save to database");
      });
  
@@ -145,7 +143,7 @@ router.post('/addSubTitle',function(req,res,next){
 });
 
 router.put('/subtitleChecked',function(req,res,next){
-        ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'1'}, function (err, result) {
+        ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'0'}, function (err, result) {
           if (err) return next(err);
           res.json(result);
         });
