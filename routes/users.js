@@ -85,15 +85,9 @@ router.post('/save_todo_title',function(req,res,next){
 });
 
 router.get('/retriveToDolist',function(req,res){
-
     ToDoHead.find({userid:req.query.userid}).sort({created_dt: -1}).exec(function(err, docs) {
         res.json(docs);  
     });
-
-    console.log(req.query.userid);
-    // var listofTODO = ToDoHead.find({userid:req.query.userid}, function(error, comments).sort( { age: -1 } ) {
-    // res.json(comments);  
-    // });
 });
 
 router.delete('/deleteToDo/:id', function(req, res, next) {
@@ -105,7 +99,7 @@ router.delete('/deleteToDo/:id', function(req, res, next) {
   });
 
  router.get('/viewHeadIndividual',function(req,res){
-    console.log('I am in viewHeadIndividual');
+   // console.log('I am in viewHeadIndividual');
     ToDoHead.find({_id:req.query.title_head_id}).exec(function(error, docs) {
         res.json(docs);  
     });   
@@ -123,7 +117,7 @@ router.post('/addSubTitle',function(req,res,next){
      });
  
      subtitle.save().then(item => {
-     res.json("SubTitle added");
+       res.json("SubTitle added");
      }).catch(err => {
      res.status(400).send("unable to save to database");
      });
@@ -131,23 +125,19 @@ router.post('/addSubTitle',function(req,res,next){
  });
 
  router.get('/listSubtitles',function(req,res){
-    console.log(req.query.title_head_id);
-    ToDoSubtitle.find({to_do_headtitleid:req.query.title_head_id}).sort({created_dt: -1}).exec(function(err, result) {
+   // console.log(req.query.title_head_id);
+    ToDoSubtitle.find({to_do_headtitleid:req.query.title_head_id,delete_subTitle:'0' }).sort({created_dt: -1}).exec(function(err, result) {
         res.json(result);  
     });
 
-    
-    // var listofTODO = ToDoHead.find({userid:req.query.userid}, function(error, comments).sort( { age: -1 } ) {
-    // res.json(comments);  
-    // });
 });
 
-router.put('/subtitleChecked',function(req,res,next){
-        ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'0'}, function (err, result) {
+ router.put('/subtitleChecked',function(req,res,next){
+    ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'1'}, function (err, result) {
           if (err) return next(err);
           res.json(result);
         });
-});
+    });
 
  
 
