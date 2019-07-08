@@ -4,7 +4,7 @@ var User = require('../models/user');
 var passport = require("passport");
 var ToDoHead = require('../models/toDotitle');
 var ToDoSubtitle = require('../models/subtitleToDo');
-
+var bcrypt = require('bcrypt');
 
 
 /* GET users listing. */
@@ -139,6 +139,44 @@ router.post('/addSubTitle',function(req,res,next){
         });
     });
 
+
+    router.get('/deletdSubtitles',function(req,res){
+        // console.log(req.query.title_head_id);
+         ToDoSubtitle.find({to_do_headtitleid:req.query.title_head_id,delete_subTitle:'1' }).sort({created_dt: -1}).exec(function(err, result) {
+             res.json(result);  
+         });
+     
+     });
+
+     router.post('/updateProfile',function(req,res,next){
+
+       console.log(req.body);
+       User.find({_id:req.body.user_id}, 'password', function (err, docs) {
+        
+        bcrypt.compare(req.body.existingpassword, docs[0].password).then(result => {
+            console.log(result);
+
+        if(result == true){
+               
+		
+        User.findOneAndUpdate({'_id':req.body.user_id}, {
+                    email:req.body.email,
+                    username:req.body.username,
+                    password:User.hashPassword(req.body.newPassword)
+                    }, 
+                    {upsert:true},
+                    function(err, doc){
+                    if (err) return res.send(500, { error: err });
+                    return res.send("succesfully saved");
+                    });
+            }
+        }).catch(error => {
+            console.log(error);
+        })
+           
+        });
+  
+     });
  
 
 module.exports = router;
