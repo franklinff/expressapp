@@ -191,4 +191,18 @@ router.post('/addSubTitle',function(req,res,next){
             });
         });
 
+   router.post('/updateTitle',function(req,res,next){
+
+
+    console.log(req.body._id);
+    console.log(req.body.title_list);
+
+
+    ToDoHead.updateOne( {"_id" : req.body._id}, { listTitle:req.body.title_list}  , function (err, result) {
+        if (err) return next(err);
+        res.json(result);
+      });
+         
+   });
+
 module.exports = router;
