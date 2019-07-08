@@ -156,19 +156,25 @@ router.post('/addSubTitle',function(req,res,next){
         bcrypt.compare(req.body.existingpassword, docs[0].password).then(result => {
             console.log(result);
 
-        if(result == true){
-               
-		
-        User.findOneAndUpdate({'_id':req.body.user_id}, {
+        if(result == true){	
+            User.findOneAndUpdate({'_id':req.body.user_id}, {
                     email:req.body.email,
                     username:req.body.username,
-                    password:User.hashPassword(req.body.newPassword)
+                    password: User.hashPassword(req.body.newPassword)
                     }, 
                     {upsert:true},
                     function(err, doc){
                     if (err) return res.send(500, { error: err });
                     return res.send("succesfully saved");
-                    });
+                    }).then(docs => {
+                        res.json('item saved to database');
+                        })
+                        .catch(err => {
+                        res.status(400).send("unable to save to database");
+                        }
+
+                    );
+                    res.json(result);
             }
         }).catch(error => {
             console.log(error);
@@ -177,6 +183,12 @@ router.post('/addSubTitle',function(req,res,next){
         });
   
      });
- 
+
+     router.put('/uncheckedSubtitle',function(req,res,next){
+        ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'0'}, function (err, result) {
+              if (err) return next(err);
+              res.json(result);
+            });
+        });
 
 module.exports = router;
