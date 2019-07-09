@@ -148,8 +148,9 @@ router.post('/addSubTitle',function(req,res,next){
      
      });
 
-    router.post('/updateProfile',function(req,res,next){
-
+    router.post('/updateProfile',function(req,res,next){     
+        console.log(req.body);
+        if(req.body.existingpassword !== null && req.body.newPassword !== null){
         User.find({_id:req.body.user_id}, 'password', function (err, docs) {
             bcrypt.compare(req.body.existingpassword, docs[0].password).then(result => {
                 // console.log(result,'12');
@@ -157,7 +158,7 @@ router.post('/addSubTitle',function(req,res,next){
                     // console.log("ia m in true");
                     User.findOneAndUpdate(
                         { "_id": req.body.user_id },
-                        { "$set": { "email": req.body.email,"username": req.body.username } }
+                        { "$set": { "email": req.body.email,"username": req.body.username,"password": User.hashPassword(req.body.newPassword) } }
                      ).then((data)=>{
                             if(data){
                               //res.status(200).json(data);
@@ -171,6 +172,9 @@ router.post('/addSubTitle',function(req,res,next){
                 }
             });
         });
+        }else{
+            res.status(200).json('false');
+        }
 
     });
 
