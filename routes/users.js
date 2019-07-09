@@ -152,17 +152,15 @@ router.post('/addSubTitle',function(req,res,next){
 
         User.find({_id:req.body.user_id}, 'password', function (err, docs) {
             bcrypt.compare(req.body.existingpassword, docs[0].password).then(result => {
-
                 // console.log(result,'12');
                 if(result == true){
                     // console.log("ia m in true");
-
                     User.findOneAndUpdate(
                         { "_id": req.body.user_id },
                         { "$set": { "email": req.body.email,"username": req.body.username } }
                      ).then((data)=>{
                             if(data){
-                              //  res.status(200).json(data);
+                              //res.status(200).json(data);
                                 res.status(200).json(result);
                             }
                      }).catch((err)=>{
@@ -171,96 +169,40 @@ router.post('/addSubTitle',function(req,res,next){
                 }else{
                     res.status(200).json(result);
                 }
-
-
             });
         });
 
     });
 
-
-
-
-
-
-
-
-
-
-
-
-    //  router.post('/updateProfile',function(req,res,next){
-
-    //    console.log(req.body);
-    //    User.find({_id:req.body.user_id}, 'password', function (err, docs) {
-        
-    //     bcrypt.compare(req.body.existingpassword, docs[0].password).then(result => {
-    //     console.log(result);
-
-    //     if(result == true){	
-
-    //         var query = {'_id':req.body.user_id};
-    //         req.newData.email = req.body.email;
-    //         req.newData.username = req.body.username;
-
-
-    //         User.findOneAndUpdate(query, req.newData, {upsert:true}, function(err, doc){
-    //             if (err) return res.send(500, { error: err });
-    //             return res.send("succesfully saved");
-    //         });
-
-
-
-
-
-        //     User.findOneAndUpdate({'_id':req.body.user_id}, {
-        //             email:req.body.email,
-        //             username:req.body.username,
-        //           //  password: User.hashPassword(req.body.newPassword)
-        //             }, 
-        //             // {upsert:true},
-        //             // function(err, doc){
-        //             // if (err) return res.send(500, { error: err });
-        //             // return res.send("succesfully saved");
-        // }
-        // // .then(docs => {
-        // //                 res.json('User updated in database');
-        // //                 })
-        // //                 .catch(err => {
-        // //                 res.status(400).send("Unable to save to database");
-        // //                 }
-        // //             );
-        //             res.json(result);
-        //     }
-        // }).catch(error => {
-        //     console.log(error);
-        // })
-           
-        // });
-  
-    //  }});
-
-     router.put('/uncheckedSubtitle',function(req,res,next){
+    router.put('/uncheckedSubtitle',function(req,res,next){
         ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'0'}, function (err, result) {
               if (err) return next(err);
               res.json(result);
             });
-        });
+    });
 
    router.post('/updateTitle',function(req,res,next){
-
-
     console.log(req.body._id);
     console.log(req.body.title_list);
-
-    
-
-
     ToDoHead.updateOne( {"_id" : req.body._id}, { listTitle:req.body.title_list}  , function (err, result) {
         if (err) return next(err);
         res.json(result);
-      });
-         
+      });      
+   });
+
+   router.post('/deleteTitletodo',function(req,res,next){
+    console.log(req.body._id);
+
+      ToDoHead.remove({ _id: req.body._id }, function(err,result) {
+        if (!err) {
+            res.json(result);     
+        }
+        else {
+            res.json(err);    
+        }
+    });
+
+
    });
 
 module.exports = router;
