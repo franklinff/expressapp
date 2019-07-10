@@ -161,14 +161,15 @@ router.post('/addSubTitle',function(req,res,next){
                         { "$set": { "email": req.body.email,"username": req.body.username,"password": User.hashPassword(req.body.newPassword) } }
                      ).then((data)=>{
                             if(data){
-                              //res.status(200).json(data);
+                                //res.status(200).json(data);
                                 res.status(200).json(result);
                             }
                      }).catch((err)=>{
                         res.status(400).json(err);
                      })
                 }else{
-                    res.status(200).json(result);
+                //  res.status(200).json(result);
+                    res.status(200).json("wrong password");
                 }
             });
         });
