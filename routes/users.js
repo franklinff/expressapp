@@ -6,7 +6,6 @@ var ToDoHead = require('../models/toDotitle');
 var ToDoSubtitle = require('../models/subtitleToDo');
 var bcrypt = require('bcrypt');
 
-
 /* GET users listing. */
 // router.get('/', function(req, res, next) {
 //   res.send('respond with a resource');
@@ -45,7 +44,7 @@ router.post('/login', function(req, res, next) {
         //return res.redirect('/users/' + user.username);    
     });
     })(req, res, next);
-  });
+});
 
 //user  
 router.get('/user',isValidUser,function(req,res,next){
@@ -56,14 +55,24 @@ router.get('/user',isValidUser,function(req,res,next){
 //logout
 router.get('/logout',isValidUser, function(req,res,next){
     req.logout();
+   // db.sessions.remove({ 'session.users': VALUE });
+    req.session.destroy((err) => {
+        if(err) {
+            return console.log(err);
+        }
+        res.status(200).clearCookie('connect.sid', {path: '/'}).json({status: "Success"});
+        res.redirect('/');
+    });
     return res.status(200).json({message:'Logout Success'});
 });
   
+//Check if credentials match
 function isValidUser(req,res,next){
     if(req.isAuthenticated()) next();
     else return res.status(401).json({message:'Unauthorized Request'});
 }
 
+//save Title head
 router.post('/save_todo_title',function(req,res,next){
    // console.log(req.body);
     var head_todo =  new ToDoHead({
@@ -74,38 +83,38 @@ router.post('/save_todo_title',function(req,res,next){
         updated_dt: '',
     });
 
-    head_todo.save()
-    .then(item => {
-    res.json('item saved to database');
-    })
-    .catch(err => {
-    res.status(400).send("unable to save to database");
+    head_todo.save().then(item => {
+        res.json('item saved to database');
+    }).catch(err => {
+        res.status(400).send("unable to save to database");
     });
-
 });
 
+//List the ToDo heads as per loggedin user
 router.get('/retriveToDolist',function(req,res){
     ToDoHead.find({userid:req.query.userid}).sort({created_dt: -1}).exec(function(err, docs) {
         res.json(docs);  
     });
 });
 
+//
 router.delete('/deleteToDo/:id', function(req, res, next) {
-    //console.log(id);
-    ToDoHead.findOneAndDelete(req.params.id, req.body, function (err, post) {
-      if (err) return next(err);
-      res.json(post);
-    });
+    console.log(id);console.log(id);console.log(id);console.log(id);console.log(id);
+    // ToDoHead.findOneAndDelete(req.params.id, req.body, function (err, post) {
+    //   if (err) return next(err);
+    //   res.json(post);
+    // });
   });
 
- router.get('/viewHeadIndividual',function(req,res){
+//  
+router.get('/viewHeadIndividual',function(req,res){
    // console.log('I am in viewHeadIndividual');
     ToDoHead.find({_id:req.query.title_head_id}).exec(function(error, docs) {
         res.json(docs);  
     });   
- });
+});
 
-
+//
 router.post('/addSubTitle',function(req,res,next){
 
     var subtitle =  new ToDoSubtitle({
@@ -124,7 +133,8 @@ router.post('/addSubTitle',function(req,res,next){
  
  });
 
- router.get('/listSubtitles',function(req,res){
+//
+router.get('/listSubtitles',function(req,res){
    // console.log(req.query.title_head_id);
     ToDoSubtitle.find({to_do_headtitleid:req.query.title_head_id,delete_subTitle:'0' }).sort({created_dt: -1}).exec(function(err, result) {
         res.json(result);  
@@ -132,23 +142,24 @@ router.post('/addSubTitle',function(req,res,next){
 
 });
 
- router.put('/subtitleChecked',function(req,res,next){
+//
+router.put('/subtitleChecked',function(req,res,next){
     ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'1'}, function (err, result) {
           if (err) return next(err);
           res.json(result);
         });
-    });
+});
 
-
-    router.get('/deletdSubtitles',function(req,res){
+//
+router.get('/deletdSubtitles',function(req,res){
         // console.log(req.query.title_head_id);
          ToDoSubtitle.find({to_do_headtitleid:req.query.title_head_id,delete_subTitle:'1' }).sort({created_dt: -1}).exec(function(err, result) {
              res.json(result);  
-         });
-     
-     });
+         });     
+});
 
-    router.post('/updateProfile',function(req,res,next){     
+//
+router.post('/updateProfile',function(req,res,next){     
         console.log(req.body);
         if(req.body.existingpassword !== null && req.body.newPassword !== null){
         User.find({_id:req.body.user_id}, 'password', function (err, docs) {
@@ -176,28 +187,29 @@ router.post('/addSubTitle',function(req,res,next){
         }else{
             res.status(200).json('false');
         }
+});
 
-    });
-
-    router.put('/uncheckedSubtitle',function(req,res,next){
+//    
+router.put('/uncheckedSubtitle',function(req,res,next){
         ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'0'}, function (err, result) {
               if (err) return next(err);
               res.json(result);
             });
-    });
+});
 
-   router.post('/updateTitle',function(req,res,next){
+//
+router.post('/updateTitle',function(req,res,next){
     console.log(req.body._id);
     console.log(req.body.title_list);
     ToDoHead.updateOne( {"_id" : req.body._id}, { listTitle:req.body.title_list}  , function (err, result) {
         if (err) return next(err);
         res.json(result);
       });      
-   });
+});
 
-   router.post('/deleteTitletodo',function(req,res,next){
-    console.log(req.body._id);
-
+//
+router.post('/deleteTitletodo',function(req,res,next){
+     console.log(req.body._id);
       ToDoHead.remove({ _id: req.body._id }, function(err,result) {
         if (!err) {
             res.json(result);     
@@ -206,8 +218,26 @@ router.post('/addSubTitle',function(req,res,next){
             res.json(err);    
         }
     });
+});
 
+router.post('/PermanentDeleteSubtitle', function(req,res,next) {
+    console.log(req.body._id);
+    ToDoSubtitle.find({ _id:req.body._id }).remove().exec(
+        function(err, result) {
+            res.json(result);  
+        }); 
+    });
 
-   });
+router.post('/subtitleUpdate',function(req,res,next){
+        console.log("I am in updateSubtitle");
+       
+        ToDoSubtitle.updateOne( {"_id" : req.body.subtitle_id}, { sub_title:req.body.subtitle_edit}  , function (err, result) {
+            if (err) return next(err);
+            res.json(result);
+          });      
+});
+
+    
+
 
 module.exports = router;

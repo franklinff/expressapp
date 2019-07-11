@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 var passport = require("passport");
 var bcrypt = require('bcrypt');
 
+//Schema for users collection
 var UserSchema = new mongoose.Schema({
     email : {type:String, require:true},
     username: {type:String, require:true},

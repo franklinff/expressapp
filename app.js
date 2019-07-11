@@ -19,12 +19,9 @@ var mongoose = require('mongoose');
 //                  .then(() =>  console.log('Connection succesful'))
 //                  .catch((err) => console.error(err));
 
-// var db = mongoose.connect('mongodb+srv://todouser:todopassword@meantodoscluster-wu3z6.mongodb.net/admintodo', { useNewUrlParser: true })
-//                  .then(() =>  console.log('Connection succesful'))
-//                  .catch((err) => console.error(err));
-
-
-var db = mongoose.connect('mongodb://localhost/admintodo', { useNewUrlParser: true })
+var db = mongoose.connect('mongodb://localhost/admintodo', { useNewUrlParser: true }).then(
+                  () =>  console.log('Local Connection succesful')).catch(
+                  (err) => console.error(err));
 
 var passport = require("passport");
 var session = require('express-session');
@@ -80,5 +77,6 @@ var listener = app.listen(3000, function(){
   console.log('Listening on port ' + listener.address().port); //Listening on port 3000
 });
 
+app.disable('etag');
 
 module.exports = app;
