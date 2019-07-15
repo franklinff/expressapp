@@ -97,16 +97,8 @@ router.get('/retriveToDolist',function(req,res){
     });
 });
 
-//
-router.delete('/deleteToDo/:id', function(req, res, next) {
-    console.log(id);console.log(id);console.log(id);console.log(id);console.log(id);
-    // ToDoHead.findOneAndDelete(req.params.id, req.body, function (err, post) {
-    //   if (err) return next(err);
-    //   res.json(post);
-    // });
-  });
 
-//  
+//Get toDO head  
 router.get('/viewHeadIndividual',function(req,res){
    // console.log('I am in viewHeadIndividual');
     ToDoHead.find({_id:req.query.title_head_id}).exec(function(error, docs) {
@@ -114,7 +106,7 @@ router.get('/viewHeadIndividual',function(req,res){
     });   
 });
 
-//
+//Add subtitle
 router.post('/addSubTitle',function(req,res,next){
 
     var subtitle =  new ToDoSubtitle({
@@ -133,7 +125,7 @@ router.post('/addSubTitle',function(req,res,next){
  
  });
 
-//
+//List subtitles
 router.get('/listSubtitles',function(req,res){
    // console.log(req.query.title_head_id);
     ToDoSubtitle.find({to_do_headtitleid:req.query.title_head_id,delete_subTitle:'0' }).sort({created_dt: -1}).exec(function(err, result) {
@@ -142,15 +134,15 @@ router.get('/listSubtitles',function(req,res){
 
 });
 
-//
+//ToDo subtitle task done
 router.put('/subtitleChecked',function(req,res,next){
-    ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'1'}, function (err, result) {
+    ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'1',updated_dt:Date.now()}, function (err, result) {
           if (err) return next(err);
           res.json(result);
         });
 });
 
-//
+//Retrive deleted subtitles
 router.get('/deletdSubtitles',function(req,res){
         // console.log(req.query.title_head_id);
          ToDoSubtitle.find({to_do_headtitleid:req.query.title_head_id,delete_subTitle:'1' }).sort({created_dt: -1}).exec(function(err, result) {
@@ -158,7 +150,7 @@ router.get('/deletdSubtitles',function(req,res){
          });     
 });
 
-//
+//Update profile
 router.post('/updateProfile',function(req,res,next){     
         console.log(req.body);
         if(req.body.existingpassword !== null && req.body.newPassword !== null){
@@ -189,7 +181,7 @@ router.post('/updateProfile',function(req,res,next){
         }
 });
 
-//    
+//Uncheck the subtitle    
 router.put('/uncheckedSubtitle',function(req,res,next){
         ToDoSubtitle.updateOne( {"_id" : req.body.id},{delete_subTitle:'0'}, function (err, result) {
               if (err) return next(err);
@@ -197,7 +189,7 @@ router.put('/uncheckedSubtitle',function(req,res,next){
             });
 });
 
-//
+//Update Todo head
 router.post('/updateTitle',function(req,res,next){
     console.log(req.body._id);
     console.log(req.body.title_list);
@@ -207,7 +199,7 @@ router.post('/updateTitle',function(req,res,next){
       });      
 });
 
-//
+//Delete todo head
 router.post('/deleteTitletodo',function(req,res,next){
      console.log(req.body._id);
       ToDoHead.remove({ _id: req.body._id }, function(err,result) {
@@ -220,6 +212,7 @@ router.post('/deleteTitletodo',function(req,res,next){
     });
 });
 
+//Delete todo subtitle
 router.post('/PermanentDeleteSubtitle', function(req,res,next) {
     console.log(req.body._id);
     ToDoSubtitle.find({ _id:req.body._id }).remove().exec(
@@ -228,16 +221,23 @@ router.post('/PermanentDeleteSubtitle', function(req,res,next) {
         }); 
     });
 
+ //Edit subtilte   
 router.post('/subtitleUpdate',function(req,res,next){
-        console.log("I am in updateSubtitle");
-       
-        ToDoSubtitle.updateOne( {"_id" : req.body.subtitle_id}, { sub_title:req.body.subtitle_edit}  , function (err, result) {
+        console.log("I am in updateSubtitle");    
+        ToDoSubtitle.updateOne( {"_id" : req.body.subtitle_id}, { sub_title:req.body.subtitle_edit }  , function (err, result) {
             if (err) return next(err);
             res.json(result);
           });      
 });
 
-    
+//
+router.delete('/deleteToDo/:id', function(req, res, next) {
+    console.log(id);console.log(id);console.log(id);console.log(id);console.log(id);
+    // ToDoHead.findOneAndDelete(req.params.id, req.body, function (err, post) {
+    //   if (err) return next(err);
+    //   res.json(post);
+    // });
+  });    
 
 
 module.exports = router;
