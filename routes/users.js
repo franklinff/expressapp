@@ -5,6 +5,9 @@ var passport = require("passport");
 var ToDoHead = require('../models/toDotitle');
 var ToDoSubtitle = require('../models/subtitleToDo');
 var bcrypt = require('bcrypt');
+var app = express();
+var jwt = require('jsonwebtoken');
+var jwtexp = require('express-jwt');
 
 /* GET users listing. */
 // router.get('/', function(req, res, next) {
@@ -36,13 +39,20 @@ async function addToDB(req,res){
 //login
 router.post('/login', function(req, res, next) {
     passport.authenticate('local', function(err, user, info) {
+
       if (err) { return res.status(501).json(err); }
       if (!user) { return res.status(501).json(info); }
       req.logIn(user, function(err) {
         if (err) { return res.status(501).json(err); }
-        return res.status(200).json({message:'Login successful'});
+
+        var token = jwt.sign({userID: user._id}, 'todo-app-super-shared-secret', {expiresIn: '2h'});       
+        console.log(token);
+        return res.status(200).json({jwttoken:token});
+
+       // return res.status(200).json({message:'Login successful'});
         //return res.redirect('/users/' + user.username);    
     });
+
     })(req, res, next);
 });
 
@@ -92,7 +102,10 @@ router.post('/save_todo_title',function(req,res,next){
 
 //List the ToDo heads as per loggedin user
 router.get('/retriveToDolist',function(req,res){
-    ToDoHead.find({userid:req.query.userid}).sort({created_dt: -1}).exec(function(err, docs) {
+    console.log(req.headers.userid);
+    var decoded = jwt.verify(req.headers.userid,'todo-app-super-shared-secret');
+    console.log(decoded.userID);
+    ToDoHead.find({userid:decoded.userID}).sort({created_dt: -1}).exec(function(err, docs) {
         res.json(docs);  
     });
 });
