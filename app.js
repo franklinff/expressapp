@@ -8,12 +8,16 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var cors = require('cors');
 var app = express();
+var jwt = require('jsonwebtoken');
+
 
 app.use(cors({
   origin:['http://localhost:4200','http://127.0.0.1:4200'],
   credentials:true
 }))
+// app.use((req, res, next) => {
 
+// })
 var mongoose = require('mongoose');
 // var db = mongoose.connect('mongodb+srv://todouser:todopassword@meantodoscluster-wu3z6.mongodb.net/admintodo', { useNewUrlParser: true })
 //                  .then(() =>  console.log('Connection succesful'))
