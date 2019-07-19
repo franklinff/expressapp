@@ -185,23 +185,39 @@ router.get('/deletdSubtitles',function(req,res){
 //Update profile
 router.post('/updateProfile',function(req,res,next){     
         console.log(req.body);
-        if(req.body.existingpassword !== null && req.body.newPassword !== null){
+        if(req.body.existingpassword !== null){
         User.find({_id:req.body.user_id}, 'password', function (err, docs) {
             bcrypt.compare(req.body.existingpassword, docs[0].password).then(result => {
                 // console.log(result,'12');
                 if(result == true){
                     // console.log("ia m in true");
-                    User.findOneAndUpdate(
-                        { "_id": req.body.user_id },
-                        { "$set": { "email": req.body.email,"username": req.body.username,"password": User.hashPassword(req.body.newPassword) } }
-                     ).then((data)=>{
-                            if(data){
-                                //res.status(200).json(data);
-                                res.status(200).json(result);
-                            }
-                     }).catch((err)=>{
-                        res.status(400).json(err);
-                     })
+                    
+                    if(req.body.newPassword == null){
+                        User.findOneAndUpdate(
+                            { "_id": req.body.user_id },
+                            { "$set": { "email": req.body.email,"username": req.body.username,"password": User.hashPassword(req.body.existingpassword) } }
+                        ).then((data)=>{
+                                if(data){
+                                    //res.status(200).json(data);
+                                    res.status(200).json(result);
+                                }
+                        }).catch((err)=>{
+                            res.status(400).json(err);
+                        })
+                    }else{
+                        User.findOneAndUpdate(
+                            { "_id": req.body.user_id },
+                            { "$set": { "email": req.body.email,"username": req.body.username,"password": User.hashPassword(req.body.newPassword) } }
+                        ).then((data)=>{
+                                if(data){
+                                    //res.status(200).json(data);
+                                    res.status(200).json(result);
+                                }
+                        }).catch((err)=>{
+                            res.status(400).json(err);
+                        })
+                    }
+
                 }else{
                 //  res.status(200).json(result);
                     res.status(200).json("wrong password");
