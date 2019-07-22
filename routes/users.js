@@ -149,7 +149,21 @@ router.post('/addSubTitle',function(req,res,next){
      });
  
      subtitle.save().then(item => {
-       res.json("SubTitle added");
+       //res.json("SubTitle added");
+
+
+    ToDoSubtitle.find({user_id:loggedindata.userID}).exec(function(err, result) {
+        total_subtiltes_count = result.length;            
+    ToDoSubtitle.find({user_id:loggedindata.userID,delete_subTitle:'1' }).exec(function(err, result) {
+            checked_subtitles_count = result.length;    
+            // console.log(checked_subtitles_count);// console.log(total_subtiltes_count);     // console.log(result);                
+            total_completed_work = (checked_subtitles_count/total_subtiltes_count);
+
+            if (err) return next(err);
+            res.json((total_completed_work*100).toFixed(2));
+        });
+    });
+
      }).catch(err => {
      res.status(400).send("unable to save to database");
      });
@@ -291,15 +305,13 @@ router.post('/deleteTitletodo',function(req,res,next){
 
 //Delete todo subtitle
 router.post('/PermanentDeleteSubtitle', function(req,res,next) {
-    var total_subtiltes_count = 0;
-    var checked_subtitles_count = 0;
-    var total_completed_work = 0;
     console.log(req.body._id);
     ToDoSubtitle.find({ _id:req.body._id }).remove().exec(
         function(err, result) {
             res.json(result);  
-        }); 
-    });
+        }
+    );
+});
 
 
  //Edit subtilte   
