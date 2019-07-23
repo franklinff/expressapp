@@ -124,11 +124,36 @@ router.post('/save_todo_title',function(req,res,next){
 
 //List the ToDo heads as per loggedin user
 router.get('/retriveToDolist',function(req,res){
-  //  console.log(req.headers.userid);
     var decoded = jwt.verify(req.headers.userid,'todo-app-super-shared-secret');
- //   console.log(decoded.userID);
+
+    var total_subtiltes_count = 0;
+    var checked_subtitles_count = 0;
+    var total_completed_work = 0;
+
     ToDoHead.find({userid:decoded.userID}).sort({created_dt: -1}).exec(function(err, docs) {
-    res.json(docs);  
+
+    ToDoSubtitle.find({user_id:decoded.userID}).exec(function(err, result) {
+        total_subtiltes_count = result.length;            
+    ToDoSubtitle.find({user_id:decoded.userID,delete_subTitle:'1' }).exec(function(err, result) {
+            checked_subtitles_count = result.length;    
+            // console.log(checked_subtitles_count);// console.log(total_subtiltes_count);     // console.log(result);                
+            total_completed_work = (checked_subtitles_count/total_subtiltes_count);
+
+            if(isNaN(total_completed_work)){
+                res.json({
+                    listData:  docs,
+                    work_done: ((0.0).toFixed(2))  
+                  });
+            }else{              
+                res.json({
+                    listData:  docs,
+                    work_done: (total_completed_work*100).toFixed(2)   
+                  });
+            }
+        });
+    });
+
+
     });
 });
 
@@ -136,7 +161,7 @@ router.get('/retriveToDolist',function(req,res){
 router.get('/viewIndividual', function(req, res){
     var data =  JSON.parse(req.headers.title_head_id)
     var loggedindata = jwt.verify(data.user_id,'todo-app-super-shared-secret');
-    console.log(data.subtitle_id);
+   // console.log(data.subtitle_id);
 
     ToDoHead.find({_id:data.subtitle_id},function(errorOne, dataOne){
         if(errorOne)
@@ -175,11 +200,9 @@ router.get('/listSubtitles',function(req,res){
             res.json({
                 headertodo: result,
                 listofsubtitles: dataTwo
-            });
-  
+            });  
      });
     });
-
  });
 
 // //Retrive deleted subtitles
@@ -243,7 +266,7 @@ router.post('/subtitleChecked',function(req,res,next){
         ToDoSubtitle.find({user_id:loggedin_user.userID,delete_subTitle:'1' }).exec(function(err, result) {
                 checked_subtitles_count = result.length;    
                 // console.log(checked_subtitles_count);// console.log(total_subtiltes_count);     
-                 console.log(result);       
+                // console.log(result);       
                 total_completed_work = (checked_subtitles_count/total_subtiltes_count);
                 if (err) return next(err);
                 res.json((total_completed_work*100).toFixed(2));
@@ -256,7 +279,7 @@ router.post('/subtitleChecked',function(req,res,next){
 
 //Update profile
 router.post('/updateProfile',function(req,res,next){     
-        console.log(req.body);
+      //  console.log(req.body);
         var loggedin_user = jwt.verify(req.body.user_id,'todo-app-super-shared-secret');
         
         if(req.body.existingpassword !== null){
@@ -291,7 +314,6 @@ router.post('/updateProfile',function(req,res,next){
                             res.status(400).json(err);
                         })
                     }
-
                 }else{
                 //  res.status(200).json(result);
                     res.status(200).json("wrong password");
@@ -325,8 +347,7 @@ router.post('/uncheckedSubtitle',function(req,res,next){
                     if (err) return next(err);
                     res.json((total_completed_work*100).toFixed(2));
                 });
-            }); 
-            
+            });           
             //   if (err) return next(err);
             //   res.json(result);
         });
@@ -336,8 +357,8 @@ router.post('/uncheckedSubtitle',function(req,res,next){
 
 //Update Todo head
 router.post('/updateTitle',function(req,res,next){
-    console.log(req.body._id);
-    console.log(req.body.title_list);
+    // console.log(req.body._id);
+    // console.log(req.body.title_list);
     ToDoHead.updateOne( {"_id" : req.body._id}, { listTitle:req.body.title_list}  , function (err, result) {
         if (err) return next(err);
         res.json(result);
@@ -350,12 +371,10 @@ router.post('/deleteTitletodo',function(req,res,next){
         ToDoSubtitle.find({ to_do_headtitleid:req.body._id }).remove().exec();
         if (!err) {
 
-
             var total_subtiltes_count = 0;
             var checked_subtitles_count = 0;
             var total_completed_work = 0;
             var loggedin_user = jwt.verify(req.body.user_id,'todo-app-super-shared-secret');
-
 
             ToDoSubtitle.find({user_id:loggedin_user.userID}).exec(function(err, result) {
                 total_subtiltes_count = result.length;          
@@ -371,9 +390,6 @@ router.post('/deleteTitletodo',function(req,res,next){
                 });
                 
             });
-
-
-
            // res.json(result);     
         }
         else {
@@ -421,14 +437,14 @@ router.post('/subtitleUpdate',function(req,res,next){
           });      
 });
 
-//
-router.delete('/deleteToDo/:id', function(req, res, next) {
-    console.log(id);
-    // ToDoHead.findOneAndDelete(req.params.id, req.body, function (err, post) {
-    //   if (err) return next(err);
-    //   res.json(post);
-    // });
-  }); 
+// //
+// router.delete('/deleteToDo/:id', function(req, res, next) {
+//     console.log(id);
+//     // ToDoHead.findOneAndDelete(req.params.id, req.body, function (err, post) {
+//     //   if (err) return next(err);
+//     //   res.json(post);
+//     // });
+//   }); 
   
   
 
