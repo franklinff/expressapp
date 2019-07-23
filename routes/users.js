@@ -83,6 +83,11 @@ function isValidUser(req,res,next){
 
 //save Title head
 router.post('/save_todo_title',function(req,res,next){
+
+    var total_subtiltes_count = 0;
+    var checked_subtitles_count = 0;
+    var total_completed_work = 0;
+
     var decoded = jwt.verify(req.body.user_id,'todo-app-super-shared-secret');
 
     var head_todo =  new ToDoHead({
@@ -94,7 +99,24 @@ router.post('/save_todo_title',function(req,res,next){
     });
 
     head_todo.save().then(item => {
-        res.json('item saved to database');
+
+        ToDoSubtitle.find({user_id:decoded.userID}).exec(function(err, result) {
+            total_subtiltes_count = result.length;            
+        ToDoSubtitle.find({user_id:decoded.userID,delete_subTitle:'1' }).exec(function(err, result) {
+                checked_subtitles_count = result.length;    
+                // console.log(checked_subtitles_count);// console.log(total_subtiltes_count);     // console.log(result);                
+                total_completed_work = (checked_subtitles_count/total_subtiltes_count);
+    
+                if (err) return next(err);
+                if(isNaN(total_completed_work)){
+                    res.json((0.00).toFixed(2));
+                }else{
+                    res.json((total_completed_work*100).toFixed(2));
+                }
+            });
+        });
+
+       // res.json('item saved to database');
     }).catch(err => {
         res.status(400).send("unable to save to database");
     });
@@ -196,8 +218,6 @@ router.post('/addSubTitle',function(req,res,next){
             res.json((total_completed_work*100).toFixed(2));
         });
     });
-
-
 
      }).catch(err => {
      res.status(400).send("unable to save to database");
@@ -354,9 +374,13 @@ router.post('/PermanentDeleteSubtitle', function(req,res,next) {
                     checked_subtitles_count = result.length; 
                     total_completed_work = (checked_subtitles_count/total_subtiltes_count);
                     if (err) return next(err);
-                    res.json((total_completed_work*100).toFixed(2));
+                    if(isNaN(total_completed_work)){
+                        res.json(0.0);
+                    }else{
+                        res.json((total_completed_work*100).toFixed(2));
+                    }
                 });
-                console.log(total_subtiltes_count);
+                
             });
             // console.log(result);
             // res.json(result);  
