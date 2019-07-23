@@ -312,7 +312,7 @@ router.post('/uncheckedSubtitle',function(req,res,next){
     var checked_subtitles_count = 0;
     var total_completed_work = 0;
     var loggedin_user = jwt.verify(req.body.user_id,'todo-app-super-shared-secret');
-    console.log(req.body);
+   // console.log(req.body);
 
         ToDoSubtitle.updateOne( {"_id" : req.body.subtitle_id},{delete_subTitle:'0'}, function (err, result) {         
             ToDoSubtitle.find({user_id:loggedin_user.userID}).exec(function(err, result) {
@@ -345,13 +345,36 @@ router.post('/updateTitle',function(req,res,next){
 });
 
 //Delete todo head
-router.post('/deleteTitletodo',function(req,res,next){
-    ///console.log(req.body);
-   
+router.post('/deleteTitletodo',function(req,res,next){   
       ToDoHead.remove({ _id: req.body._id }, function(err,result) {
         ToDoSubtitle.find({ to_do_headtitleid:req.body._id }).remove().exec();
         if (!err) {
-            res.json(result);     
+
+
+            var total_subtiltes_count = 0;
+            var checked_subtitles_count = 0;
+            var total_completed_work = 0;
+            var loggedin_user = jwt.verify(req.body.user_id,'todo-app-super-shared-secret');
+
+
+            ToDoSubtitle.find({user_id:loggedin_user.userID}).exec(function(err, result) {
+                total_subtiltes_count = result.length;          
+                ToDoSubtitle.find({user_id:loggedin_user.userID,delete_subTitle:'1' }).exec(function(err, result) {
+                    checked_subtitles_count = result.length; 
+                    total_completed_work = (checked_subtitles_count/total_subtiltes_count);
+                    if (err) return next(err);
+                    if(isNaN(total_completed_work)){
+                        res.json((0.0).toFixed(2));
+                    }else{
+                        res.json((total_completed_work*100).toFixed(2));
+                    }
+                });
+                
+            });
+
+
+
+           // res.json(result);     
         }
         else {
             res.json(err);    
