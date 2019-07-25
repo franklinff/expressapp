@@ -55,32 +55,19 @@ router.post('/login', function(req, res, next) {
 });
 
 //user  
-router.get('/user',isValidUser,function(req,res,next){
-
-console.log(req);
-
-    return res.status(200).json(req.user);
-    // User.findOne({id: jwt_payload.id}, function(err, user) {
-    //     if (err) {
-    //         return res.status(200).json('req.user');
-    //     }
-    //     if (user) {
-    //         return res.status(200).json('req.user');
-    //     } else {
-    //         return res.status(200).json('req.user');
-    //     }
-    // });
-});
+// router.get('/user',isValidUser,function(req,res,next){
+//     console.log(req);
+//     return res.status(200).json(req.user);
+// });
   
 //logout
-router.get('/logout',isValidUser, function(req,res,next){
+router.get('/logout', function(req,res,next){
     req.logout();
     req.session.destroy((err) => {
         if(err) {
             return console.log(err);
         }
-        res.status(200).clearCookie('connect.sid', {path: '/'}).json({status: "Success"});
-        res.redirect('/');
+       // res.status(200).clearCookie('connect.sid', {path: '/'}).json({status: "Success"});
     });
     return res.status(200).json({message:'Logout Success'});
 });
@@ -169,7 +156,7 @@ router.get('/retriveToDolist',function(req,res){
 router.get('/viewIndividual', function(req, res){
    var data =  JSON.parse(req.headers.title_head_id)
    var loggedindata = jwt.verify(data.user_id,'todo-app-super-shared-secret');
-   console.log(data.subtitle_id);
+   //console.log(data.subtitle_id);
 
     ToDoHead.find({_id:data.subtitle_id},function(errorOne, dataOne){
         if(errorOne)
@@ -222,14 +209,12 @@ router.post('/addSubTitle',function(req,res,next){
      });
  
      subtitle.save().then(item => {
-       //res.json("SubTitle added");
-
 
     ToDoSubtitle.find({user_id:loggedindata.userID}).exec(function(err, result) {
         total_subtiltes_count = result.length;            
     ToDoSubtitle.find({user_id:loggedindata.userID,delete_subTitle:'1' }).exec(function(err, result) {
             checked_subtitles_count = result.length;    
-            // console.log(checked_subtitles_count);// console.log(total_subtiltes_count);     // console.log(result);                
+            // console.log(checked_subtitles_count);
             total_completed_work = (checked_subtitles_count/total_subtiltes_count);
 
             if (err) return next(err);
@@ -246,7 +231,6 @@ router.post('/addSubTitle',function(req,res,next){
 
 
 //ToDo subtitle task done
-//router.put('/subtitleChecked',function(req,res,next){
 router.post('/subtitleChecked',function(req,res,next){   
    
     var total_subtiltes_count = 0;
@@ -271,7 +255,6 @@ router.post('/subtitleChecked',function(req,res,next){
 });
 
 
-
 //Update profile
 router.post('/updateProfile',function(req,res,next){     
       //  console.log(req.body);
@@ -282,7 +265,6 @@ router.post('/updateProfile',function(req,res,next){
             bcrypt.compare(req.body.existingpassword, docs[0].password).then(result => {
                 // console.log(result,'12');
                 if(result == true){
-                    // console.log("ia m in true");
                     
                     if(req.body.newPassword == null){
                         User.findOneAndUpdate(
@@ -320,8 +302,6 @@ router.post('/updateProfile',function(req,res,next){
         }
 });
 
-//Uncheck the subtitle    
-//router.put('/uncheckedSubtitle',function(req,res,next){
 
 router.post('/uncheckedSubtitle',function(req,res,next){
 
@@ -336,7 +316,7 @@ router.post('/uncheckedSubtitle',function(req,res,next){
                 total_subtiltes_count = result.length;            
             ToDoSubtitle.find({user_id:loggedin_user.userID,delete_subTitle:'1' }).exec(function(err, result) {
                     checked_subtitles_count = result.length;    
-                    // console.log(checked_subtitles_count);// console.log(total_subtiltes_count);     // console.log(result);                
+                    // console.log(checked_subtitles_count);
                     total_completed_work = (checked_subtitles_count/total_subtiltes_count);
 
                     if (err) return next(err);
@@ -352,8 +332,6 @@ router.post('/uncheckedSubtitle',function(req,res,next){
 
 //Update Todo head
 router.post('/updateTitle',function(req,res,next){
-    // console.log(req.body._id);
-    // console.log(req.body.title_list);
     ToDoHead.updateOne( {"_id" : req.body._id}, { listTitle:req.body.title_list}  , function (err, result) {
         if (err) return next(err);
         res.json(result);
@@ -395,7 +373,6 @@ router.post('/deleteTitletodo',function(req,res,next){
 
 //Delete todo subtitle
 router.post('/PermanentDeleteSubtitle', function(req,res,next) {
-    //console.log(req.body);
     var total_subtiltes_count = 0;
     var checked_subtitles_count = 0;
     var total_completed_work = 0;
@@ -416,7 +393,6 @@ router.post('/PermanentDeleteSubtitle', function(req,res,next) {
                 });
                 
             });
-            // console.log(result);
             // res.json(result);  
         }
     );
@@ -425,12 +401,23 @@ router.post('/PermanentDeleteSubtitle', function(req,res,next) {
 
  //Edit subtilte   
 router.post('/subtitleUpdate',function(req,res,next){
-        console.log("I am in updateSubtitle");    
         ToDoSubtitle.updateOne( {"_id" : req.body.subtitle_id}, { sub_title:req.body.subtitle_edit }  , function (err, result) {
             if (err) return next(err);
             res.json(result);
           });      
 });
-  
+
+//getuser_info 
+router.get('/getuser_info',function(req,res,next){
+    var jwt_payload = jwt.verify(req.headers.token,'todo-app-super-shared-secret');
+    User.findOne({_id: jwt_payload.userID}, function(err, user) {
+        if (err) {
+            return res.status(200).json(err);
+        }
+        if (user) {
+            return res.status(200).json(user);
+        }
+    });
+});  
 
 module.exports = router;
