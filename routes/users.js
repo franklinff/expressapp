@@ -340,8 +340,9 @@ router.post('/updateTitle',function(req,res,next){
 
 //Delete todo head
 router.post('/deleteTitletodo',function(req,res,next){   
-      ToDoHead.remove({ _id: req.body._id }, function(err,result) {
-        ToDoSubtitle.find({ to_do_headtitleid:req.body._id }).remove().exec();
+      ToDoHead.deleteMany({ _id: req.body._id }, function(err,result) {
+        //ToDoSubtitle.find({ to_do_headtitleid:req.body._id }).remove().exec();
+        ToDoSubtitle.deleteMany({ to_do_headtitleid:req.body._id }, function(error,solution){});
         if (!err) {
 
             var total_subtiltes_count = 0;
@@ -377,8 +378,8 @@ router.post('/PermanentDeleteSubtitle', function(req,res,next) {
     var checked_subtitles_count = 0;
     var total_completed_work = 0;
     var loggedin_user = jwt.verify(req.body.user_id,'todo-app-super-shared-secret');
-    ToDoSubtitle.find({ _id:req.body.subtitle_id }).remove().exec(
-        function(err, result) {
+
+        ToDoSubtitle.deleteMany({ _id:req.body.subtitle_id }, function(err,result) {
             ToDoSubtitle.find({user_id:loggedin_user.userID}).exec(function(err, result) {
                 total_subtiltes_count = result.length;          
                 ToDoSubtitle.find({user_id:loggedin_user.userID,delete_subTitle:'1' }).exec(function(err, result) {
@@ -394,8 +395,7 @@ router.post('/PermanentDeleteSubtitle', function(req,res,next) {
                 
             });
             // res.json(result);  
-        }
-    );
+        });
 });
 
 
