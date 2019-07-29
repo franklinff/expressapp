@@ -293,11 +293,13 @@ router.post('/updateProfile',function(req,res,next){
                             { "$set": { "email": req.body.email,"username": req.body.username,"password": User.hashPassword(req.body.existingpassword) } }
                         ).then((data)=>{
                                 if(data){
+
+
                                     //res.status(200).json(data);
                                     res.status(200).json(result);
                                 }
                         }).catch((err)=>{
-                            res.status(400).json(err);
+                            res.json('duplicate_email');
                         })
                     }else{
                         User.findOneAndUpdate(
@@ -309,7 +311,7 @@ router.post('/updateProfile',function(req,res,next){
                                     res.status(200).json(result);
                                 }
                         }).catch((err)=>{
-                            res.status(400).json(err);
+                            res.json('duplicate_email');
                         })
                     }
                 }else{
