@@ -47,7 +47,6 @@ router.post('/login', function(req, res, next) {
 
         var token = jwt.sign({userID: user._id}, 'todo-app-super-shared-secret', {expiresIn: '2h'});           
         return res.status(200).json({jwttoken:token});
-        //console.log(token);
         //return res.status(200).json({message:'Login successful'});//return res.redirect('/users/' + user.username);         
     });
 
@@ -84,7 +83,6 @@ router.post('/save_todo_title',function(req,res,next){
     var total_subtiltes_count = 0;
     var checked_subtitles_count = 0;
     var total_completed_work = 0;
-
     var decoded = jwt.verify(req.body.user_id,'todo-app-super-shared-secret');
 
     var head_todo =  new ToDoHead({
@@ -100,19 +98,25 @@ router.post('/save_todo_title',function(req,res,next){
         ToDoSubtitle.find({user_id:decoded.userID}).exec(function(err, result) {
             total_subtiltes_count = result.length;            
         ToDoSubtitle.find({user_id:decoded.userID,delete_subTitle:'1' }).exec(function(err, result) {
-                checked_subtitles_count = result.length;    
-                // console.log(checked_subtitles_count);// console.log(total_subtiltes_count);     // console.log(result);                
+                checked_subtitles_count = result.length;                    
                 total_completed_work = (checked_subtitles_count/total_subtiltes_count);
     
                 if (err) return next(err);
-                if(isNaN(total_completed_work)){
-                    res.json((0.00).toFixed(2));
-                }else{
-                    res.json((total_completed_work*100).toFixed(2));
-                }
+                ToDoHead.find({userid:decoded.userID}).sort({created_dt: -1}).exec(function(err, docs) {
+                    if(isNaN(total_completed_work)){
+                        res.json({
+                            total_completed_work:(0.00).toFixed(2),
+                            headertodo:docs
+                        });
+                    }else{
+                        res.json({
+                            total_completed_work:(total_completed_work*100).toFixed(2),
+                            headertodo:docs
+                        });
+                    }
+                });
             });
         });
-
        // res.json('item saved to database');
     }).catch(err => {
         res.status(400).send("unable to save to database");
@@ -133,7 +137,7 @@ router.get('/retriveToDolist',function(req,res){
         total_subtiltes_count = result.length;            
     ToDoSubtitle.find({user_id:decoded.userID,delete_subTitle:'1' }).exec(function(err, result) {
             checked_subtitles_count = result.length;    
-            // console.log(checked_subtitles_count);// console.log(total_subtiltes_count);     // console.log(result);                
+            // console.log(checked_subtitles_count);
             total_completed_work = (checked_subtitles_count/total_subtiltes_count);
 
             if(isNaN(total_completed_work)){
@@ -153,25 +157,28 @@ router.get('/retriveToDolist',function(req,res){
 });
 
 
-router.get('/viewIndividual', function(req, res){
-   var data =  JSON.parse(req.headers.title_head_id)
-   var loggedindata = jwt.verify(data.user_id,'todo-app-super-shared-secret');
-   //console.log(data.subtitle_id);
+router.get('/viewIndividual', function(req, res){  
+  var data =  JSON.parse(req.headers.title_head_id);
 
-    ToDoHead.find({_id:data.subtitle_id},function(errorOne, dataOne){
-        if(errorOne)
-           throw new Error(errorOne);
-           ToDoSubtitle.find({to_do_headtitleid:data.subtitle_id}, function(errorTwo, dataTwo){
-           if(errorTwo)
-               throw new Error(errorTwo);
-
-           res.json({
-               headertodo: dataOne,
-               listofsubtitles: dataTwo
-           });
-        }).sort({delete_subTitle: 0});
-    });
-
+  jwt.verify(data.user_id,'todo-app-super-shared-secret', function (err, payload) { 
+    if (payload) {
+        ToDoHead.find({_id:data.subtitle_id},function(errorOne, dataOne){
+            if(errorOne)
+               throw new Error(errorOne);
+               ToDoSubtitle.find({to_do_headtitleid:data.subtitle_id}, function(errorTwo, dataTwo){
+               if(errorTwo)
+                   throw new Error(errorTwo);    
+               res.json({
+                   headertodo: dataOne,
+                   listofsubtitles: dataTwo
+               });
+            }).sort({delete_subTitle: 0});
+        });
+    } else {
+        console.log(err.message);
+        res.json({ error:err.message }); 
+    }
+  })
 });
 
 
@@ -185,7 +192,7 @@ router.get('/listSubtitles',function(req,res){
         ToDoSubtitle.find({to_do_headtitleid:user_list.head_id}, function(errorTwo, dataTwo){
             if(errorTwo)
                 throw new Error(errorTwo);
- 
+
             res.json({
                 headertodo: result,
                 listofsubtitles: dataTwo
@@ -196,7 +203,7 @@ router.get('/listSubtitles',function(req,res){
 
 
 //Add subtitle
-router.post('/addSubTitle',function(req,res,next){
+router.post('/addSubTitle',function(req,res,next){ //console.log(req.body);
 
     var loggedindata = jwt.verify(req.body.user_id,'todo-app-super-shared-secret');
     var subtitle =  new ToDoSubtitle({
@@ -208,7 +215,7 @@ router.post('/addSubTitle',function(req,res,next){
         updated_dt: ''
      });
  
-     subtitle.save().then(item => {
+    subtitle.save().then(item => {
 
     ToDoSubtitle.find({user_id:loggedindata.userID}).exec(function(err, result) {
         total_subtiltes_count = result.length;            
@@ -216,22 +223,28 @@ router.post('/addSubTitle',function(req,res,next){
             checked_subtitles_count = result.length;    
             // console.log(checked_subtitles_count);
             total_completed_work = (checked_subtitles_count/total_subtiltes_count);
-
             if (err) return next(err);
-            res.json((total_completed_work*100).toFixed(2));
+            ToDoSubtitle.find({to_do_headtitleid: req.body.headertodo_id}, function(errorTwo, dataTwo){
+                if(errorTwo)
+                    throw new Error(errorTwo);    
+                res.json({
+                    total_completed_work: (total_completed_work*100).toFixed(2),
+                    listofsubtitles: dataTwo
+                });
+             }).sort({delete_subTitle: 0});
         });
     });
 
-     }).catch(err => {
+    }).catch(err => {
      res.status(400).send("unable to save to database");
-     });
+    });
  
  });
 
 
 
 //ToDo subtitle task done
-router.post('/subtitleChecked',function(req,res,next){   
+router.post('/subtitleChecked',function(req,res,next){  
    
     var total_subtiltes_count = 0;
     var checked_subtitles_count = 0;
@@ -247,11 +260,19 @@ router.post('/subtitleChecked',function(req,res,next){
                 // console.log(checked_subtitles_count);    
                 total_completed_work = (checked_subtitles_count/total_subtiltes_count);
                 if (err) return next(err);
-                res.json((total_completed_work*100).toFixed(2));
+                ToDoSubtitle.find({to_do_headtitleid:req.body.to_do_headtitleid}, function(errorTwo, dataTwo){
+                    if(errorTwo)
+                        throw new Error(errorTwo);
+                    res.json({
+                        total_completed_work: (total_completed_work*100).toFixed(2),
+                        listofsubtitles: dataTwo
+                    });
+                    //res.json((total_completed_work*100).toFixed(2));
+                 }).sort({delete_subTitle: 0});
+            
             });
         }); 
-
-      });
+    });
 });
 
 
@@ -303,7 +324,7 @@ router.post('/updateProfile',function(req,res,next){
 });
 
 
-router.post('/uncheckedSubtitle',function(req,res,next){
+router.post('/uncheckedSubtitle',function(req,res,next){  
 
     var total_subtiltes_count = 0;
     var checked_subtitles_count = 0;
@@ -315,16 +336,23 @@ router.post('/uncheckedSubtitle',function(req,res,next){
             ToDoSubtitle.find({user_id:loggedin_user.userID}).exec(function(err, result) {
                 total_subtiltes_count = result.length;            
             ToDoSubtitle.find({user_id:loggedin_user.userID,delete_subTitle:'1' }).exec(function(err, result) {
-                    checked_subtitles_count = result.length;    
-                    // console.log(checked_subtitles_count);
+                    checked_subtitles_count = result.length;        
                     total_completed_work = (checked_subtitles_count/total_subtiltes_count);
-
                     if (err) return next(err);
-                    res.json((total_completed_work*100).toFixed(2));
+
+                    ToDoSubtitle.find({to_do_headtitleid:req.body.to_do_headtitleid}, function(errorTwo, dataTwo){
+                        if(errorTwo)
+                            throw new Error(errorTwo);
+                        res.json({
+                            total_completed_work: (total_completed_work*100).toFixed(2),
+                            listofsubtitles: dataTwo
+                        });
+                        //res.json((total_completed_work*100).toFixed(2));
+                     }).sort({delete_subTitle: 0});
+
+                   // res.json((total_completed_work*100).toFixed(2));
                 });
             });           
-            //   if (err) return next(err);
-            //   res.json(result);
         });
 });
 
@@ -332,19 +360,36 @@ router.post('/uncheckedSubtitle',function(req,res,next){
 
 //Update Todo head
 router.post('/updateTitle',function(req,res,next){
+    var loggedin_user = jwt.verify(req.body.user_id,'todo-app-super-shared-secret');
     ToDoHead.updateOne( {"_id" : req.body._id}, { listTitle:req.body.title_list}  , function (err, result) {
         if (err) return next(err);
-        res.json(result);
+       // res.json(result);
+        ToDoHead.find({_id:req.body._id},function(errorOne, dataOne){
+            if(errorOne)
+               throw new Error(errorOne);
+               ToDoSubtitle.find({to_do_headtitleid:req.body._id}, function(errorTwo, dataTwo){
+               if(errorTwo)
+                throw new Error(errorTwo);
+                ToDoHead.find({userid:loggedin_user.userID},function(errorThree, dataThree){
+                    res.json({
+                        headertodo: dataOne,
+                        listofsubtitles: dataTwo,
+                        listData: dataThree,
+                        edit_result:result  
+                    });
+                });
+
+            }).sort({created_dt: 0});
+        });
       });      
 });
 
 //Delete todo head
-router.post('/deleteTitletodo',function(req,res,next){   
+router.post('/deleteTitletodo',function(req,res,next){  
       ToDoHead.deleteMany({ _id: req.body._id }, function(err,result) {
         //ToDoSubtitle.find({ to_do_headtitleid:req.body._id }).remove().exec();
         ToDoSubtitle.deleteMany({ to_do_headtitleid:req.body._id }, function(error,solution){});
         if (!err) {
-
             var total_subtiltes_count = 0;
             var checked_subtitles_count = 0;
             var total_completed_work = 0;
@@ -356,15 +401,27 @@ router.post('/deleteTitletodo',function(req,res,next){
                     checked_subtitles_count = result.length; 
                     total_completed_work = (checked_subtitles_count/total_subtiltes_count);
                     if (err) return next(err);
-                    if(isNaN(total_completed_work)){
-                        res.json((0.0).toFixed(2));
-                    }else{
-                        res.json((total_completed_work*100).toFixed(2));
-                    }
+
+                    ToDoHead.find({userid:loggedin_user.userID}).sort({created_dt: -1}).exec(function(err, docs) {
+
+                        if(isNaN(total_completed_work)){
+                            res.json(  {
+                                total_completed_work:((0.0).toFixed(2)),  
+                                list_of_title_head : docs
+                            });
+
+                        }else{
+                            res.json({
+                                total_completed_work:(total_completed_work*100).toFixed(2),
+                                list_of_title_head : docs  
+                            });
+                        }
+
+                    });
+
                 });
                 
-            });
-           // res.json(result);     
+            });          
         }
         else {
             res.json(err);    
@@ -373,7 +430,7 @@ router.post('/deleteTitletodo',function(req,res,next){
 });
 
 //Delete todo subtitle
-router.post('/PermanentDeleteSubtitle', function(req,res,next) {
+router.post('/PermanentDeleteSubtitle', function(req,res,next) { // console.log(req.body);
     var total_subtiltes_count = 0;
     var checked_subtitles_count = 0;
     var total_completed_work = 0;
@@ -385,11 +442,43 @@ router.post('/PermanentDeleteSubtitle', function(req,res,next) {
                 ToDoSubtitle.find({user_id:loggedin_user.userID,delete_subTitle:'1' }).exec(function(err, result) {
                     checked_subtitles_count = result.length; 
                     total_completed_work = (checked_subtitles_count/total_subtiltes_count);
+
                     if (err) return next(err);
                     if(isNaN(total_completed_work)){
-                        res.json(0.0);
+
+                        ToDoHead.find({_id:req.body.head_todo_id},function(errorOne, dataOne){
+                            if(errorOne)
+                               throw new Error(errorOne);
+                               ToDoSubtitle.find({to_do_headtitleid:req.body.head_todo_id}, function(errorTwo, dataTwo){
+                               if(errorTwo)
+                                throw new Error(errorTwo);
+                    
+                                res.json({
+                                   headertodo: dataOne,
+                                   listofsubtitles: dataTwo,
+                                   total_completed_work : (0.0).toFixed(2)
+                                });
+                            }).sort({delete_subTitle: 0});
+                        });
+//                        res.json({total_completed_work : 0.0} );
                     }else{
-                        res.json((total_completed_work*100).toFixed(2));
+
+                        ToDoHead.find({_id:req.body.head_todo_id},function(errorOne, dataOne){
+                            if(errorOne)
+                               throw new Error(errorOne);
+                               ToDoSubtitle.find({to_do_headtitleid:req.body.head_todo_id}, function(errorTwo, dataTwo){
+                               if(errorTwo)
+                                   throw new Error(errorTwo);
+                    
+                               res.json({
+                                   headertodo: dataOne,
+                                   listofsubtitles: dataTwo,
+                                   total_completed_work : (total_completed_work*100).toFixed(2)
+                               });
+                            }).sort({delete_subTitle: 0});
+                        });
+
+                      //  res.json( {total_completed_work : (total_completed_work*100).toFixed(2) }  );
                     }
                 });
                 
@@ -403,7 +492,22 @@ router.post('/PermanentDeleteSubtitle', function(req,res,next) {
 router.post('/subtitleUpdate',function(req,res,next){
         ToDoSubtitle.updateOne( {"_id" : req.body.subtitle_id}, { sub_title:req.body.subtitle_edit }  , function (err, result) {
             if (err) return next(err);
-            res.json(result);
+         //   res.json(result);
+
+            ToDoHead.find({_id:req.body.head_todo_id},function(errorOne, dataOne){
+                if(errorOne)
+                   throw new Error(errorOne);
+                   ToDoSubtitle.find({to_do_headtitleid:req.body.head_todo_id}, function(errorTwo, dataTwo){
+                   if(errorTwo)
+                       throw new Error(errorTwo);
+                   res.json({
+                       headertodo: dataOne,
+                       listofsubtitles: dataTwo,
+                       edit_result:result  
+                   });
+                }).sort({delete_subTitle: 0});
+            });
+
           });      
 });
 
