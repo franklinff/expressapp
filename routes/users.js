@@ -9,6 +9,7 @@ var app = express();
 var jwt = require('jsonwebtoken');
 var jwtexp = require('express-jwt');
 
+
 /* GET users listing. */
 // router.get('/', function(req, res, next) {
 //   res.send('respond with a resource');
@@ -275,57 +276,80 @@ router.post('/subtitleChecked',function(req,res,next){
     });
 });
 
-
 //Update profile
 router.post('/updateProfile',function(req,res,next){     
-      //  console.log(req.body);
-        var loggedin_user = jwt.verify(req.body.user_id,'todo-app-super-shared-secret');
-        
-        if(req.body.existingpassword !== null){
-        User.find({_id:loggedin_user.userID}, 'password', function (err, docs) {
-            bcrypt.compare(req.body.existingpassword, docs[0].password).then(result => {
-                // console.log(result,'12');
-                if(result == true){
-                    
-                    if(req.body.newPassword == null){
-                        User.findOneAndUpdate(
-                            { "_id": loggedin_user.userID },
-                            { "$set": { "email": req.body.email,"username": req.body.username,"password": User.hashPassword(req.body.existingpassword) } }
-                        ).then((data)=>{
-                                if(data){
-
-
-                                    //res.status(200).json(data);
-                                    res.status(200).json(result);
-                                }
-                        }).catch((err)=>{
-                            res.json('duplicate_email');
-                        })
-                    }else{
-                        User.findOneAndUpdate(
-                            { "_id": loggedin_user.userID },
-                            { "$set": { "email": req.body.email,"username": req.body.username,"password": User.hashPassword(req.body.newPassword) } }
-                        ).then((data)=>{
-                                if(data){
-                                    //res.status(200).json(data);
-                                    res.status(200).json(result);
-                                }
-                        }).catch((err)=>{
-                            res.json('duplicate_email');
-                        })
-                    }
-                }else{
-                //  res.status(200).json(result);
-                    res.status(200).json("wrong password");
+      jwt.verify(req.body.user_id,'todo-app-super-shared-secret', function (err, payload) {
+        if(req.body.newPassword == null){
+            User.findOneAndUpdate( { "_id": payload.userID }, { "$set": { "username": req.body.username, "email": req.body.email } },  { runValidators: true }, function(err, doc) {       
+                if (err) {
+                     res.json({ error:err }); 
                 }
-            });
-        });
-        }else{
-            res.status(200).json('false');
+                if (doc) {
+                    res.json({ result:doc }); 
+                }           
+            }); 
         }
+        if(req.body.newPassword != null){
+            User.findOneAndUpdate( { "_id": payload.userID }, { "$set": { "username": req.body.username, "email": req.body.email, "password":User.hashPassword(req.body.newPassword)  } },{ runValidators: true }, function(err, doc) {
+            
+                if (err) {
+                    res.json({ error:err }); 
+                }
+                if (doc) {
+                    res.json({ result:doc }); 
+                }           
+            });  
+        }
+      });     
 });
 
 
+// //Update profile
+// router.post('/updateProfile',function(req,res,next){     
+//       //  console.log(req.body);
+//         var loggedin_user = jwt.verify(req.body.user_id,'todo-app-super-shared-secret');
+        
+//         if(req.body.existingpassword !== null){
+//         User.find({_id:loggedin_user.userID}, 'password', function (err, docs) {
+//             bcrypt.compare(req.body.existingpassword, docs[0].password).then(result => {
+//                 // console.log(result,'12');
+//                 if(result == true){
+                    
+//                     if(req.body.newPassword == null){
+//                         User.findOneAndUpdate(
+//                             { "_id": loggedin_user.userID },
+//                             { "$set": { "email": req.body.email,"username": req.body.username,"password": User.hashPassword(req.body.existingpassword) } }
+//                         ).then((data)=>{
+//                                 if(data){
+//                                     //res.status(200).json(data);
+//                                     res.status(200).json(result);
+//                                 }
+//                         }).catch((err)=>{
+//                             res.json('duplicate_email');
+//                         })
+//                     }else{
+//                         User.findOneAndUpdate(
+//                             { "_id": loggedin_user.userID },
+//                             { "$set": { "email": req.body.email,"username": req.body.username,"password": User.hashPassword(req.body.newPassword) } }
+//                         ).then((data)=>{
+//                                 if(data){
+//                                     //res.status(200).json(data);
+//                                     res.status(200).json(result);
+//                                 }
+//                         }).catch((err)=>{
+//                             res.json('duplicate_email');
+//                         })
+//                     }
+//                 }else{
+//                 //  res.status(200).json(result);
+//                     res.status(200).json("wrong password");
+//                 }
+//             });
+//         });
+//         }else{
+//             res.status(200).json('false');
+//         }
+// });
 router.post('/uncheckedSubtitle',function(req,res,next){  
 
     var total_subtiltes_count = 0;
